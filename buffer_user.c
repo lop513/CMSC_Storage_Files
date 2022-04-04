@@ -9,7 +9,7 @@ struct node_421 *head = NULL;
 struct node_421 *tail = NULL;
 
 long init_buffer_421(void){
-
+  
   if(head == NULL){
     
     buff.write = (struct node_421*) malloc(sizeof(struct node_421));

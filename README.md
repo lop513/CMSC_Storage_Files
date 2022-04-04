@@ -15,6 +15,15 @@ After I finished the functions I created a variety of tests in test.c and
 test_user.c. These tests mainly focused on the normal operation of the buffer
 and then the edge cases that I could think of.
 
-In regards to compiling in user space,  use the Makefile I provided and type
-"make". Then run the program by tryping "./buffer". This will then go through
+In regards to compiling in user space, run the following command,
+   "gcc buffer.h buffer.c test_user.c -o buffer".
+
+Then run the program by typing "./buffer". This will then go through
 my tests in test_user.c.
+
+In regards to compiling in kernel space, you will to compile and install
+the kernel and then reboot. After that you can use the Makefile I provided
+by typing, "Make test" then type "./test" and it will run the test with
+buffer.h, buffer.c and test.c. In order to see the kernel log statements
+you will have to run, "sudo dmesg". Now with the stdout and kernel log output
+that should show you all of my tests.
