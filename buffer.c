@@ -1,40 +1,31 @@
 // This file is the implementation of the buffer in kernel space
 
 #include "buffer.h"
-//#include <stdio.h>
-//#include <malloc.h>
-//#include <stddef.h>
-//#include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/syscalls.h>
 
-struct ring_buffer_421 buff;
+static struct ring_buffer_421 buff;
 struct node_421 *head;
 struct node_421 *tail;
 int init_check = 0;
 
 SYSCALL_DEFINE0(init_buffer_421){
- 
+  
   struct node_421 *ptr;
   struct node_421 *newNode;
   int i;
 
-  printk("Something new :) \n");
   
   if(init_check == 0){
-    //struct node_421 *ptr = buff.write;
-    //int i;
-    
-    ptr = buff.write;
+
+
     head = kmalloc(sizeof(struct node_421), GFP_KERNEL);
     buff.write = head;
-    buff.write->data = 0;
-    //buff.write->next = NULL;
-   
-   
-
+    buff.write->data = 0;   
+    
+    ptr = buff.write;
     for(i = 0; i < SIZE_OF_BUFFER - 1; i++){
 
       newNode = kmalloc(sizeof(struct node_421), GFP_KERNEL);
@@ -75,12 +66,12 @@ SYSCALL_DEFINE1(insert_buffer_421, int, i){
      
       return 0;
     }
+    printk("Failed to insert data into buffer, buffer is full \n");
     return -1;
   }
 
   else {
-    printk("Failed to insert data into buffer, buffer does not exist " 
-	   "or buffer is full \n");
+    printk("Failed to insert data into buffer, buffer does not exist \n");
     return -1;
   }
   
@@ -94,7 +85,7 @@ SYSCALL_DEFINE0(print_buffer_421){
 
     printk("\n");
     printk("Start of buffer print \n");
-    //printk("New \n");
+
     do{
 
       printk("Node %d: %d\n", counter, buff.read->data);
