@@ -1,4 +1,4 @@
-// File for testing buffer_user_sem.c in user space
+// File for testing buffer_sem.c in kernel space
 
 #include "buffer_sem.h"
 
@@ -8,6 +8,30 @@
 #include <semaphore.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/syscall.h>
+#include <linux/kernel.h>
+
+#define __NR_init_buffer_sem_421 446
+#define __NR_enqueue_buffer_sem_421 447
+#define __NR_dequeue_buffer_sem_421 448
+#define __NR_delete_buffer_sem_421 449
+
+
+long init_buffer_sem_421_syscall(void){
+  return syscall(__NR_init_buffer_sem_421);
+}
+
+long enqueue_buffer_sem_421_syscall(char* data){
+  return syscall(__NR_enqueue_buffer_sem_421, *data);
+}
+
+long dequeue_buffer_sem_421_syscall(char* data){
+  return syscall(__NR_dequeue_buffer_sem_421, *data);
+}
+
+long delete_buffer_sem_421_syscall(void){
+  return syscall(__NR_delete_buffer_sem_421);
+}
 
 void *producer(){
   char *prod_data[DATA_LENGTH];
@@ -36,12 +60,12 @@ void *producer(){
     
 
     usleep(rand()%max);
-    if(enqueue_buffer_421(*prod_data) == 0){
+    if(enqueue_buffer_sem_421_syscall(*prod_data) == 0){
       num_check++;
     }
     
     curr[0] = num_check + '0';
-    print_semaphores();
+    
   }
   
   return 0;
@@ -77,13 +101,13 @@ void *consumer(){
     
     
     usleep(rand()%max);
-    if(dequeue_buffer_421(*con_data) == 0){
+    if(dequeue_buffer_sem_421_syscall(*con_data) == 0){
       num_check++;
     }
     
 
     curr[0] = num_check + '0';
-    print_semaphores();
+    
   }
   
   return 0;
@@ -108,9 +132,7 @@ int main(){
   printf("Testing Producer and Consumer threads \n");
   printf("Scenario 1: An empty buffer \n");
   
-  init_buffer_421();
-
-  print_semaphores();
+  init_buffer_sem_421_syscall();
   
   srand(time(0));
   pthread_create(&pro, 0, producer, NULL);
@@ -121,14 +143,12 @@ int main(){
   pthread_join(pro, NULL);
   pthread_join(con, NULL);
   
-  print_semaphores();
-  
-  delete_buffer_421();
+  delete_buffer_sem_421_syscall();
   printf("\n");
 
 
   printf("Scenario 2: A full buffer \n");
-  init_buffer_421();
+  init_buffer_sem_421_syscall();
 
   for(i = 0; i < 20; i++){
   
@@ -141,7 +161,7 @@ int main(){
       curr_num[j] = curr;
     }
     
-    enqueue_buffer_421(*curr_num);
+    enqueue_buffer_sem_421_syscall(*curr_num);
     num_check++;
     
     curr[0] = num_check + '0';
@@ -158,7 +178,7 @@ int main(){
   pthread_join(pro, NULL);
   pthread_join(con, NULL);
   
-  delete_buffer_421();
+  delete_buffer_sem_421_syscall();
   printf("\n");
   
   return 0;
