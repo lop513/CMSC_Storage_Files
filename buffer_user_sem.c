@@ -74,44 +74,36 @@ long enqueue_buffer_421(char *data){
   int i;
   int num;
 
-
-  sem_wait(&mutex); // Lock the mutex since we could be producing
-
   
   if(init_check == 1) {
-    if(buff.length < 20){
+   
+   
+    sem_wait(&empty);
+    sem_wait(&mutex);
+    
+    
+    printf(":: Enqueueing element into buffer. :: \n");
+    num = data[0];
+    printf("%c%c%c%c%c%c%c%c%c%c... \n", num, num, num, num, num, num, num, num, num, num);
 
-      sem_wait(&empty);
-      printf(":: Enqueueing element into buffer. :: \n");
-      num = data[0];
-      printf("%c%c%c%c%c%c%c%c%c%c... \n", num, num, num, num, num, num, num, num, num, num);
+
+    memcpy(buff.write->data, data, DATA_LENGTH);
 
       
-      for(i = 0; i < DATA_LENGTH; i++){
-	buff.write->data[i] = *data;
-      }
-     
-      
-      buff.length++;
-      printf("%d item(s) in buffer. \n", buff.length);
-      buff.write = buff.write->next;
+    buff.length++;
+    printf("%d item(s) in buffer. \n", buff.length);
+    buff.write = buff.write->next;
 
-      sem_post(&mutex);  // Unlock the mutex since we are done producing 
-      sem_post(&full);  // Signal to consumer that buffer has some data that they can consume
-      
-      return 0;
-    }
     sem_post(&mutex);  // Unlock the mutex since we are done producing 
-    //sem_post(&full); 
-   
-    printf("Failed to enqueue data into buffer, buffer is full \n");
-   
-    return -1;
-  }
+    sem_post(&full);  // Signal to consumer that buffer has some data that they can consume
+      
+    return 0;
 
+  }
+ 
+   
   else {
-    sem_post(&mutex);  // Unlock the mutex since we are done producing
-    //sem_post(&full);
+    
     
     printf("Failed to enqueue data into buffer, buffer does not exist \n");
     
@@ -125,57 +117,34 @@ long dequeue_buffer_421(char *data){
   int i;
   int num;
 
-  sem_wait(&mutex);  // Lock the mutex since we could be consuming
-
-  //curr = head;
   
   if(init_check == 1){
-    if(buff.length > 0){
-      
-      sem_wait(&full);
-      printf(":: Dequeueing element from buffer. :: \n");
-      num = data[0];
-      printf("%c%c%c%c%c%c%c%c%c%c... \n", num, num, num, num, num, num, num, num, num, num);
-      
-      
-      for(i = 0; i < DATA_LENGTH; i++){
-	data = &buff.read->data[i];
-	buff.read->data[i] = '\0';
-      }
-      //buff.write = buff.read;
-      /*
-      // Main deletion code 
-      while(curr->data[0] != data[0]){
-      
-	if(curr->next == head){
-	  printf("Node is not found\n");
-	  break;
-	}
-	prev = curr;
-	curr = curr->next;
-      }
-      */
-      buff.length--;
-      printf("%d item(s) in buffer. \n", buff.length);
-      buff.read = buff.read->next;
+    
+    
+    sem_wait(&full);
+    sem_wait(&mutex);
 
-      sem_post(&mutex);  // Unlock the mutex since we are done consuming 
-      sem_post(&empty);  // Signal to producer that buffer has some empty slots allowing them to produce
+    printf(":: Dequeueing element from buffer. :: \n");
+    num = data[0];
+    printf("%c%c%c%c%c%c%c%c%c%c... \n", num, num, num, num, num, num, num, num, num, num);
       
-      return 0;
-    }
+    
+    memcpy(data, buff.read->data, DATA_LENGTH);
+
+      
+    buff.length--;
+    printf("%d item(s) in buffer. \n", buff.length);
+    buff.read = buff.read->next;
+
     sem_post(&mutex);  // Unlock the mutex since we are done consuming 
-    //sem_post(&empty); 
-    
-    printf("Failed to dequeue data from buffer, buffer is empty  \n");
-    
-    return -1;
+    sem_post(&empty);  // Signal to producer that buffer has some empty slots allowing them to produce
+      
+    return 0;
   }
-
-  else {
-    sem_post(&mutex);  // Unlock the mutex since we are done consuming
-    //sem_post(&empty); 
     
+  
+  else {
+ 
     printf("Failed to dequeue data from buffer, buffer does not exist \n");
 
     return -1;
@@ -240,10 +209,10 @@ void print_semaphores(void){
     printf("sem_t mutex = %d \n", value);
     
     sem_getvalue(&full, &value);
-    printf("Sem_t fill-count = %d \n", value);
+    printf("sem_t fill-count = %d \n", value);
 
     sem_getvalue(&empty, &value);
-    printf("Sem_t empty-count = %d \n", value); 
+    printf("sem_t empty-count = %d \n", value); 
     printf("\n");
     
     return;
